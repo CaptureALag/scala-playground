@@ -5,7 +5,7 @@ package cf691.b
   * LetterSymmetryChecker(a, b) to check if a and b are symmetric
   * LetterSymmeryChecker(a) to check if a is symmetric to itself
   */
-object LetterSymmetryChecker extends Function2[Char, Char, Boolean] {
+object LetterSymmetryChecker extends ((Char, Char) => Boolean) {
   val symLetters : Seq[Char] =
     Seq('H', 'I', 'M', 'O', 'o', 'T', 'U', 'V', 'v', 'W', 'w', 'X', 'x', 'Y')
 

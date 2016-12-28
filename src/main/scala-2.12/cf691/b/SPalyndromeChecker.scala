@@ -2,7 +2,7 @@ package cf691.b
 
 import scalaz._, Scalaz._
 
-object SPalyndromeChecker extends Function1[String, Boolean] {
+object SPalyndromeChecker extends ((String) => Boolean) {
  override def apply(s: String): Boolean =
    StringMiddleSplitter(s) match {
       case (left : String, midLetter : Option[Char], right : String) =>

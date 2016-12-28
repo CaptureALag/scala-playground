@@ -1,6 +1,6 @@
 package cf691.b
 
-object StringMiddleSplitter extends Function1[String, (String, Option[Char], String)] {
+object StringMiddleSplitter extends ((String) => (String, Option[Char], String)) {
   override def apply(inputString: String): (String, Option[Char], String) = {
     val middle = inputString.length / 2
     inputString.toVector.splitAt(middle) match {
