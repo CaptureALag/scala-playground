@@ -7,9 +7,9 @@ class Number(rawIntPart : Seq[Char], rawRealPart : Seq[Char]) {
   def getMaxPowOf10 : Option[Int] =
     (
       if(intPart.isEmpty) {
-        realPart.zip(Stream.from(1))
+        realPart.zip(Stream.from(-1, -1))
       } else {
-        intPart.zip(Stream.from(-1, -1))
+        intPart.reverse.zip(Stream.from(0)).reverse
       }
     ).find(_._1 != '0').map(_._2)
 
@@ -20,12 +20,15 @@ class Number(rawIntPart : Seq[Char], rawRealPart : Seq[Char]) {
         val (realPartToMove, newRealPart) = realPart.splitAt(x)
         new Number(intPart ++ realPartToMove, newRealPart)
       case x if x < 0 =>
-        val (newIntPart, intPartToMove) = intPart.splitAt(intPart.size - 1 - x)
+        val (newIntPart, intPartToMove) = intPart.splitAt(intPart.size + x)
         new Number(newIntPart, intPartToMove ++ realPart)
     }
 
   override def toString: String =
-    s"$intPart${if(realPart.isEmpty) "" else "."}$realPart"
+    if(intPart.isEmpty && realPart.isEmpty)
+      "0"
+    else
+      s"${intPart.mkString}${if(realPart.isEmpty) "" else "."}${realPart.mkString}"
 }
 
 object Number {
