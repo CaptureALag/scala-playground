@@ -33,23 +33,22 @@ class Matrix[T](val rows : Iterable[Iterable[T]])(implicit num : Numeric[T]) {
   type MatrixState[R] = State[Matrix[T], R]
   type MatrixMultiplicatorTMatrixState[R] = WriterT[MatrixState, Matrix[T], R]
   object MatrixMultiplicatorTMatrixState {
-    def apply[R](f : Matrix[T] => (Matrix[T], (Matrix[T], R))) : MatrixMultiplicatorTMatrixState[R] =
-      WriterT[MatrixState, Matrix[T], R](State[Matrix[T], (Matrix[T], R)](f))
+    def apply[R](fState : Matrix[T] => (Matrix[T], R), toMultiply : Matrix[T] = multiplicationMonoid.zero) : MatrixMultiplicatorTMatrixState[R] =
+      WriterT[MatrixState, Matrix[T], R](State[Matrix[T], (Matrix[T], R)](
+        fState.andThen({
+          case (st, r) => st -> (toMultiply, r)
+        })))
 
-    def modifyState(f : Matrix[T] => Matrix[T]) : MatrixMultiplicatorTMatrixState[Matrix[T]] =
-      apply(st => {
-        val newSt = f(st)
-        multiplicationMonoid.zero -> (newSt, newSt)
-      })
+    def idState : Matrix[T] => (Matrix[T], Unit) = (identity[Matrix[T]] _).andThen((_, ()))
 
     def lift[R](state : MatrixState[R]) : MatrixMultiplicatorTMatrixState[R] =
-      apply(state.map(multiplicationMonoid.zero -> _).run)
+      apply(state.run)
 
     def multiplyWriterBy(matrix : Matrix[T]) : MatrixMultiplicatorTMatrixState[Unit] =
-      apply(st => matrix -> (st, ()))
+      apply(idState, matrix)
 
     def doNothing : MatrixMultiplicatorTMatrixState[Unit] =
-      apply(st => multiplicationMonoid.zero -> (st, ()))
+      apply(idState)
 
     def If(cond : Boolean, action : MatrixMultiplicatorTMatrixState[Unit]) : MatrixMultiplicatorTMatrixState[Unit] =
       if(cond)
@@ -61,7 +60,11 @@ class Matrix[T](val rows : Iterable[Iterable[T]])(implicit num : Numeric[T]) {
 
       override def zero: Matrix[T] = idMatrix
 
-      override def append(m1: Matrix[T], m2: => Matrix[T]): Matrix[T] = m1.multiply(m2)
+      override def append(m1: Matrix[T], m2: => Matrix[T]): Matrix[T] = {
+        val res = m1.multiply(m2)
+        // print(s"appending ${m1.sum} ${m2.sum} = ${res.sum} | ")
+        res
+      }
     }
 
     implicit def multiplicationMonoid : Monoid[Matrix[T]] = {
@@ -82,7 +85,9 @@ class Matrix[T](val rows : Iterable[Iterable[T]])(implicit num : Numeric[T]) {
           _ <- If(powsOf2.contains(bit), multiplyWriterBy(poweredSoFar))
           _ <- If(bit != maxPow, lift(modify[Matrix[T]](_.square)))
         } yield ()
-      Stream.range(0, maxPow).map(_power).sequence.run(this)._1
+      val res = Stream.range(0, maxPow + 1).map(_power).sequence.run(this)
+      //println(s"res - ${res._1.sum}, ${res._2._1.sum}")
+      res._2._1
   }
 
   def sum : T = rows.map(_.reduce(num.plus)).reduce(num.plus)
