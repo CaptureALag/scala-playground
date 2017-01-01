@@ -4,7 +4,15 @@ import scalaz._
 import Scalaz._
 import scala.collection.immutable.BitSet
 
-class Matrix[T](val rows : Iterable[Iterable[T]])(implicit num : Numeric[T]) {
+class Matrix[T](val rows : Iterable[Iterable[T]])(implicit num : Numeric[T], mod : Int = 1000000007) {
+  private val numModVal = num.fromInt(mod)
+  private def numMod(a : T, b : T) : T =
+    Stream.iterate(a)(num.minus(_, b))
+      .grouped(2).map({ case Stream(x, y) => (x, y)})
+      .find(x => num.compare(x._2, num.zero) < 0)
+      .get._1
+  private def normalizeNum : T => T = numMod(_, numModVal)
+
   val columns : Iterable[Iterable[T]] = rows.transpose
 
   private class IdMatrix(matrixSize : Int) extends Matrix[T](Stream.range(0, matrixSize).map(i => (0 until matrixSize).map(j => if(i == j) num.one else num.zero))) {
@@ -20,7 +28,9 @@ class Matrix[T](val rows : Iterable[Iterable[T]])(implicit num : Numeric[T]) {
       case _ =>
         new Matrix(
           this.rows.map(other.columns.toStream.strengthL(_).map({
-            case (x, y) => x.toStream.fzipWith(y.toStream)(num.times).reduce(num.plus)
+            case (x, y) =>
+              val sum = x.toStream.fzipWith(y.toStream)(num.times).reduce(num.plus)
+              normalizeNum(sum)
           }))
         )
     }
