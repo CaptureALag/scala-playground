@@ -4,7 +4,8 @@ import scala.io.StdIn
 
 object IO {
   def readString() : String = StdIn.readLine()
-  def readTokens() : Seq[String] = StdIn.readLine().split("\\s+")
+  def readTokens() : Seq[String] = readString().split("\\s+")
+  def readInt() : Int = readString().toInt
   def readInts() : Seq[Int] = readTokens().map(_.toInt)
   def readLongs() : Seq[Long] = readTokens().map(_.toLong)
 

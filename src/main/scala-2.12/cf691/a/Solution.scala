@@ -1,6 +1,6 @@
 package cf691.a
 
-import cf691.Bool2String
+import Utils.Bool2String
 
 import scala.io.StdIn
 
